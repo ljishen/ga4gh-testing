@@ -9,7 +9,7 @@ RUN apt-get update \
     && apt-get install -y \
         python-pip \ 
         python-dev \
-    && pip install --upgrade locustio pyzmq 
+    && pip install --upgrade locustio pyzmq gevent 
 
 # Clean Up
 RUN apt-get clean \
@@ -17,4 +17,5 @@ RUN apt-get clean \
 
 # May need to increase the maximum number of open files
 
+EXPOSE 8089 5557
 WORKDIR /root
