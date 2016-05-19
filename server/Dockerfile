@@ -24,7 +24,7 @@ RUN apt-get update \
 RUN mkdir /var/cache/apache2/python-egg-cache \
     && chown www-data:www-data /var/cache/apache2/python-egg-cache/
 
-# Create a directory to hold the GA4GH server code, configurations
+# Create a directory to hold the GA4GH server code and configurations
 RUN mkdir /srv/ga4gh
 WORKDIR /srv/ga4gh
 
@@ -38,7 +38,7 @@ RUN virtualenv ga4gh-server-env \
 
 # Install server from source
 WORKDIR /srv/ga4gh/server
-python setup.py install
+RUN python setup.py install
 
 # Create configuration files
 COPY application.wsgi /srv/ga4gh/application.wsgi
