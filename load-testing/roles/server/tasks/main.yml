@@ -15,17 +15,17 @@
 
 - name: Download Sequence Annotations DB
   get_url:
-    url: "{{ sequence_annotations_url }}"
-    dest: "{{ data_source_path }}/{{ data_source_folder }}/datasets/1kg-p3-subset/sequenceAnnotations/gencode_v24lift37.db"
+    url: "{{ sequence_annotations_db_url }}"
+    dest: "{{ data_source_path }}/{{ data_source_folder }}/gencode_v24lift37.db"
     force: no
 
 - name: Start GA4GH Reference Server
   docker:
-    image: afirth/ga4gh-server
+    image: ljishen/ga4gh-server
     name: ga4gh_server
     state: reloaded
-    volumes: "{{ data_source_path }}/{{ data_source_folder }}:/data:ro"
+    volumes: "{{ data_source_path }}/{{ data_source_folder }}:/srv/ga4gh/data:ro"
     ports: 80:80
     env:
       GA4GH_DEBUG: True
-      GA4GH_DATA_SOURCE: /data
+      GA4GH_DATA_SOURCE: /srv/ga4gh/data/repo.db
