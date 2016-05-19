@@ -24,6 +24,8 @@
     image: ljishen/ga4gh-server
     name: ga4gh_server
     state: reloaded
+    pull: always
+    restart_policy: on-failure
     volumes: "{{ data_source_path }}/{{ data_source_folder }}:/srv/ga4gh/data:ro"
     ports: 80:80
     env:
