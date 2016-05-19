@@ -1,10 +1,14 @@
+# Configuration file for server, including Flask, see configuration documentation
+# for details
+# This file needs to be copied to /srv/ga4gh/config.py by default
 import os
 
 #TODO this logic could move to frontend.configure() or BaseConfig
 # For docker, if/when a default is set in serverconfig.py, run -v /localdata:/default-path
 # If the env variable GA4GH_DATA_SOURCE is set, use that path. Otherwise, use the default path
-DATA_SOURCE = os.getenv('GA4GH_DATA_SOURCE', "/srv/ga4gh/ga4gh-example-data")
+DATA_SOURCE = os.getenv('GA4GH_DATA_SOURCE', "/srv/ga4gh/ga4gh-example-data/repo.db")
 
 # If the env variable GA4GH_DEBUG is set, use that. Otherwise, use the empty string (False)
-# Enable with True
+# Enable with True.
+# WARNING: this enables Flask debugging and is insecure.
 DEBUG = os.getenv('GA4GH_DEBUG', "")

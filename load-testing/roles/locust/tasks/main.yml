@@ -1,23 +1,23 @@
 ---
-- name: download locustfile.py
+- name: Download locustfile.py
   get_url: url={{ locustfile_url }} dest={{ locustfile_path }} force=yes
   when: locustfile_url is defined
 
-- name: count locust hosts
+- name: Count Locust Hosts
   set_fact: num_hosts="{{ groups.locust | length }}"
 
-- name: show number of locust hosts
+- name: Show Number of Locust Hosts
   debug: msg="Number of Locust hosts is {{ num_hosts }}"
 
-- name: check if master
+- name: Check if Master
   set_fact: comm_args="--master"
   when: (num_hosts != "1") and (groups.locust.index(inventory_hostname) == 0)
 
-- name: check if slave
-  set_fact: comm_args="--slave --master-host={{ groups.server[0] }}"
+- name: Check if Slave
+  set_fact: comm_args="--slave --master-host={{ groups.server[0] }}:8089"
   when: (num_hosts != "1") and (not groups.locust.index(inventory_hostname) == 0)
 
-- name: start locust
+- name: Start Locust
   docker:
     image: ljishen/locust
     name: locust
@@ -25,4 +25,4 @@
     volumes: /tmp/locustfile.py:/root/locustfile.py:ro
     expose: 8089    # default port for locust
     ports: 8089:8089
-    command: /usr/local/bin/locust --host={{ groups['server'][0] }} {{ comm_args | default("")}}
+    command: /usr/local/bin/locust --host=http://{{ groups['server'][0] }} {{ comm_args | default("")}}

@@ -4,7 +4,7 @@ FROM ubuntu:latest
 
 MAINTAINER Jianshen Liu <jliu120@ucsc.edu>
 
-# Install basic pre-requisite packages & enable mod_wsgi 
+# Install basic pre-requisite packages
 RUN apt-get update \
     && apt-get install -y \
         python-dev \
@@ -16,22 +16,29 @@ RUN apt-get update \
         libssl-dev \
         libcurl4-openssl-dev \
         apache2 \
-        libapache2-mod-wsgi
+        libapache2-mod-wsgi \
+        git
 
 # Create the Python egg cache directory,
 # and make it writable by the www-data user
 RUN mkdir /var/cache/apache2/python-egg-cache \
     && chown www-data:www-data /var/cache/apache2/python-egg-cache/
 
-# Create a directory to hold the GA4GH server code,
-# configuration and data
+# Create a directory to hold the GA4GH server code, configurations
 RUN mkdir /srv/ga4gh
 WORKDIR /srv/ga4gh
 
-# Make a virtualenv, and install the ga4gh package
+# Clone the source code
+RUN git clone https://github.com/ga4gh/server.git
+
+# Make a virtualenv and install sphinx
 RUN virtualenv ga4gh-server-env \
     && /bin/bash -c "source ga4gh-server-env/bin/activate" \
-    && pip install ga4gh
+    && pip install sphinx
+
+# Install server from source
+WORKDIR /srv/ga4gh/server
+python setup.py install
 
 # Create configuration files
 COPY application.wsgi /srv/ga4gh/application.wsgi

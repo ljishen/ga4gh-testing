@@ -17,7 +17,7 @@ def searchreadgroupsets(l):
 def searchreads(l):
     start = randint(0,123123123)
     end = start + randint(1,123123123)
-    l.client.post("/reads/search", data=json.dumps({"readGroupIds": ["WyIxa2dlbm9tZXMiLCJyZ3MiLCJIRzAwMDk3Lm1hcHBlZC5JTExVTUlOQS5id2EuR0JSLmxvd19jb3ZlcmFnZS4yMDEzMDQxNSIsIlNSUjc0MTM4NCJd"], "referenceId": "WyJOQ0JJMzciLCIxIl0", "start": start, "end": end}), headers=headers)
+    l.client.post("/reads/search", data=json.dumps({"readGroupIds": ["WyIxa2dlbm9tZXMiLCJyZ3MiLCJIRzAzMjcwIiwiRVJSMTg0MzM2Il0"], "referenceId": "WyJOQ0JJMzciLCIxIl0", "start": start, "end": end}), headers=headers)
 
 def searchfeaturesets(l):
     l.client.post("/featuresets/search", data=json.dumps({"datasetId": "WyIxa2dlbm9tZXMiXQ"}), headers=headers)
@@ -27,7 +27,7 @@ def searchfeatures(l):
     end = start + randint(1,123123123)
     chrom = "chr" + str(randint(1,22))
     l.client.post("/features/search", data=json.dumps({"featureSetId": "WyIxa2dlbm9tZXMiLCJnZW5jb2RlX3YyNGxpZnQzNyJd",  "start": start, "end": end, "referenceName": chrom, "parentId": "", "featureTypes": []}), headers=headers)
-  
+
 def searchvariants(l):
     start = randint(0,123123123)
     end = start + randint(1,123123123)

@@ -1,17 +1,20 @@
-- name: install docker 
+- name: Install Docker on Server
+  any_errors_fatal: true
   hosts: all
   become: yes
   roles:
-    - { role: common, when: install_docker }
+    - { role: angstwad.docker_ubuntu, when: install_docker }
 
-- name: deploy ga4gh reference server
+- name: Deploy GA4GH Reference Server
   hosts: server
+  become: yes
   gather_facts: no
   roles:
     - { role: server, when: deploy_server }
 
-- name: deloy locust
+- name: Deloy Locust
   hosts: locust
   gather_facts: no
+  become: yes
   roles:
     - locust
