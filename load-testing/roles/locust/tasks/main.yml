@@ -23,6 +23,8 @@
     name: locust
     state: reloaded
     pull: always
-    publish_all_ports: yes
+    ports:
+      - "8089:8089"
+      - "5557:5557"
     volumes: /tmp/locustfile.py:/root/locustfile.py:ro
     command: /usr/local/bin/locust --host=http://{{ groups['server'][0] }} {{ comm_args | default("")}}
