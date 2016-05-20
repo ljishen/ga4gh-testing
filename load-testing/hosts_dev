@@ -1,7 +1,13 @@
-# The first host is master if multiple hosts defined
-[locust]
+# Specify at least one master
+[master]
 192.168.140.2       ansible_ssh_user=issdm
+
+[slave]
 192.168.140.81      ansible_ssh_user=issdm
+
+[locust:children]
+master
+slave
 
 [server]
 192.168.140.2       ansible_ssh_user=issdm

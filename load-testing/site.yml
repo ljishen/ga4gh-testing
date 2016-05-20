@@ -16,13 +16,16 @@
   hosts: locust
   become: yes
   gather_facts: no
+
   vars:
-    num_hosts: "{{ groups['locust'] | length }}"
+    num_slaves: "{{ groups['slave'] | length }}"
     container_name: "locust"
+
   pre_tasks:
     - name: Download locustfile
       get_url: url={{ locustfile_url }} dest={{ volume_host_dir }}/{{ locust_filename }} force=yes
       when: locustfile_url is defined
+
   roles:
-    - { role: locust/standalone, when: num_hosts | int == 1 }
-    - { role: locust/distributed, when: num_hosts | int != 1 }
+    - { role: locust/standalone, when: num_slaves | int == 0 }
+    - { role: locust/distributed, when: num_slaves | int != 0 }

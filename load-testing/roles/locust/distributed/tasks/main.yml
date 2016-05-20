@@ -1,11 +1,11 @@
 ---
 - name: Set Fact for Master
   set_fact: locust_args="--master --master-bind-port={{ master_slave_port }}"
-  when: groups.locust.index(inventory_hostname) == 0
+  when: inventory_hostname in groups['master']
 
 - name: Set Fact for Slave
-  set_fact: locust_args="--slave --master-port={{ master_slave_port }} --master-host={{ groups['locust'][0] }}"
-  when: groups.locust.index(inventory_hostname) != 0
+  set_fact: locust_args="--slave --master-port={{ master_slave_port }} --master-host={{ groups['master'][0] }}"
+  when: inventory_hostname in groups['slave']
 
 - name: Run Load Testing
   docker:
