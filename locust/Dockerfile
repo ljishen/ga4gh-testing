@@ -17,5 +17,4 @@ RUN apt-get clean \
 
 # May need to increase the maximum number of open files
 
-EXPOSE 8089 5557
 WORKDIR /root

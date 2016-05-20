@@ -1,0 +1,29 @@
+---
+- name: Set Fact for Master
+  set_fact: locust_args="--master --master-bind-port={{ master_slave_port }}"
+  when: groups.locust.index(inventory_hostname) == 0
+
+- name: Set Fact for Slave
+  set_fact: locust_args="--slave --master-port={{ master_slave_port }} --master-host={{ groups['locust'][0] }}"
+  when: groups.locust.index(inventory_hostname) != 0
+
+- name: Run Load Testing
+  docker:
+    image: ljishen/locust
+    name: "{{ container_name }}"
+    state: reloaded
+    pull: always
+    expose:
+      - "{{ master_slave_port }}"
+      - "{{ master_slave_port | int + 1 }}"
+      - 8089
+    ports:
+      - "{{ master_slave_port }}:{{ master_slave_port }}"
+      - "{{ master_slave_port | int + 1 }}:{{ master_slave_port | int + 1 }}" # locust will use the port specified, as well as the port number +1
+      - "8089:8089"
+    volumes: "{{ volume_host_dir }}/{{ locust_filename }}:/root/{{ locust_filename }}:ro"
+    command: > 
+        /usr/local/bin/locust
+          -f /root/{{ locust_filename }}
+          --host=http://{{ groups['server'][0] }}
+          {{ locust_args }}

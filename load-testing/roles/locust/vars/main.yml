@@ -1,3 +1,0 @@
----
-locustfile_url: https://raw.githubusercontent.com/ljishen/ga4gh-testing/master/load-testing/locustfile.py 
-locustfile_path: /tmp

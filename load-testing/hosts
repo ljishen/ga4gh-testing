@@ -1,4 +1,4 @@
-# The first host is master if multiple hosts define
+# The first host is master if multiple hosts defined
 [locust]
 13.91.60.178    ansible_ssh_user=azureuser
 13.91.59.22     ansible_ssh_user=azureuser

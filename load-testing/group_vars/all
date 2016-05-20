@@ -1,3 +1,8 @@
 ---
 install_docker: no
 deploy_server: yes
+
+# Variables for Locust
+locustfile_url: https://raw.githubusercontent.com/ljishen/ga4gh-testing/master/load-testing/locustfile.py 
+volume_host_dir: /tmp
+locust_filename: locustfile.py

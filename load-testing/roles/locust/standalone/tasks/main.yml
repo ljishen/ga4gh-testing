@@ -1,0 +1,24 @@
+---
+- name: Pull (or update) Locust Image and Clean Existing Container 
+  docker:
+    image: ljishen/locust
+    name: "{{ container_name }}"
+    state: absent
+    pull: always
+
+- name: Run Load Testing
+  shell: >
+    docker run \
+      -v {{ volume_host_dir }}:/root  \
+      --name {{ container_name }} \
+      ljishen/locust  \
+      /usr/local/bin/locust \
+        -f /root/{{ locust_filename }} \
+        --host=http://{{ groups['server'][0] }} \
+        --no-web --only-summary \
+        --logfile {{ locust_log_filename }} \
+        -c {{ num_clients }} \
+        -r {{ hatch_rate }} \
+        -n {{ num_requests }} \
+            >{{ volume_host_dir }}/{{ locust_stats_filename }} \
+            2>&1
