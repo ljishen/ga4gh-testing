@@ -48,5 +48,5 @@
         fail_on_missing: yes
         flat: yes
         src: "{{ master_host_container_volume_dir }}/{{ locust_stats_filename }}"
-        dest: /tmp/locust/locust_stats_file_{{ hostvars[groups['master'][0]]['commit_hash']['stdout'] }}.log
+        dest: "{{ file_server_dir }}/locust_stats_file_{{ hostvars[groups['master'][0]]['commit_hash']['stdout'] }}.log"
       when: groups.slave | length == 0
