@@ -3,7 +3,7 @@
 13.91.60.178    ansible_ssh_user=azureuser
 
 [slave]
-13.91.59.22     ansible_ssh_user=azureuser
+#13.91.59.22     ansible_ssh_user=azureuser
 
 [locust:children]
 master
