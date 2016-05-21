@@ -9,7 +9,7 @@
 - name: Run Load Testing
   shell: >
     docker run \
-      -v {{ volume_host_dir }}:/root  \
+      -v {{ master_host_container_volume_dir }}:/root  \
       --name {{ container_name }} \
       ljishen/locust  \
       /usr/local/bin/locust \
@@ -20,5 +20,6 @@
         -c {{ num_clients }} \
         -r {{ hatch_rate }} \
         -n {{ num_requests }} \
-            >{{ volume_host_dir }}/{{ locust_stats_filename }} \
+            >{{ master_host_container_volume_dir }}/{{ locust_stats_filename }} \
             2>&1
+  ignore_errors: yes

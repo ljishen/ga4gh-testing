@@ -5,6 +5,7 @@
   roles:
     - { role: angstwad.docker_ubuntu, when: install_docker }
 
+
 - name: Deploy GA4GH Reference Server
   hosts: server
   become: yes
@@ -12,20 +13,40 @@
   roles:
     - { role: server, when: deploy_server }
 
+
 - name: Run Locust
   hosts: locust
   become: yes
   gather_facts: no
 
   vars:
-    num_slaves: "{{ groups['slave'] | length }}"
+    num_slaves: "{{ groups.slave | length }}"
     container_name: "locust"
 
   pre_tasks:
     - name: Download locustfile
-      get_url: url={{ locustfile_url }} dest={{ volume_host_dir }}/{{ locust_filename }} force=yes
+      get_url: url={{ locustfile_url }} dest={{ master_host_container_volume_dir }}/{{ locust_filename }} force=yes
       when: locustfile_url is defined
 
   roles:
-    - { role: locust/standalone, when: num_slaves | int == 0 }
-    - { role: locust/distributed, when: num_slaves | int != 0 }
+    - { role: locust_standalone, when: num_slaves | int == 0 }
+    - { role: locust_distributed, when: num_slaves | int != 0 }
+
+- name: Aquire Stats File Suffix
+  hosts: server
+  become: yes
+  gather_facts: no
+  roles:
+    - { role: query_commit_hash, when: groups.slave | length == 0 }
+
+- name: Move Locust Stats File to HTTP Serfver
+  hosts: master
+  gather_facts: no
+  tasks:
+    - name: Fetch Stats File from Master
+      fetch:
+        fail_on_missing: yes
+        flat: yes
+        src: "{{ master_host_container_volume_dir }}/{{ locust_stats_filename }}"
+        dest: /tmp/locust/locust_stats_file_{{ hostvars[groups['master'][0]]['commit_hash']['stdout'] }}.log
+      when: groups.slave | length == 0

@@ -18,11 +18,12 @@
     url: "{{ sequence_annotations_db_url }}"
     dest: "{{ data_source_path }}/{{ data_source_folder }}/gencode_v24lift37.db"
     force: no
+  when: false
 
 - name: Start GA4GH Reference Server
   docker:
     image: ljishen/ga4gh-server
-    name: ga4gh_server
+    name: "{{ server_container_name }}"
     state: reloaded
     pull: always
     restart_policy: on-failure

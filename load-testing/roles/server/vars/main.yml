@@ -1,5 +1,5 @@
 ---
-data_source_url: https://github.com/ga4gh/server/releases/download/data/ga4gh-example-data-v4.0.tar
+data_source_url: https://github.com/ga4gh/server/releases/download/data/ga4gh-example-data-v4.1.tar
 data_source_path: /tmp
 data_source_folder: ga4gh-example-data
 ncbi37_ref_set_url: ftp://piha.soe.ucsc.edu/referenceSets.zip

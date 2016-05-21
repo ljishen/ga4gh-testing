@@ -4,5 +4,9 @@ deploy_server: yes
 
 # Variables for Locust
 locustfile_url: https://raw.githubusercontent.com/ljishen/ga4gh-testing/master/load-testing/locustfile.py 
-volume_host_dir: /tmp
+master_host_container_volume_dir: /tmp
 locust_filename: locustfile.py
+locust_stats_filename: locust_stats_file.log
+
+# Variables for server
+server_container_name: ga4gh_server

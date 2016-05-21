@@ -1,0 +1,7 @@
+- name: Query Server Container ID
+  command: docker ps -aqf name={{ server_container_name }}
+  register: server_container_id
+
+- name: Query Lastest Commit Hash
+  command: docker exec {{ server_container_id.stdout }} git -C /srv/ga4gh/server log -1 --pretty=format:%H
+  register: commit_hash
