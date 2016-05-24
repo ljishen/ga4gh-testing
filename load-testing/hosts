@@ -2,6 +2,8 @@
 [master]
 13.91.60.178    ansible_ssh_user=azureuser
 
+# Add slave nodes if you want to run load tests
+# distributed across multiple nodes
 [slave]
 #13.91.59.22     ansible_ssh_user=azureuser
 
