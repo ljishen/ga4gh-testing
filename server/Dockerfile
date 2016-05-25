@@ -26,15 +26,15 @@ RUN mkdir /var/cache/apache2/python-egg-cache \
 # Clone the source code
 RUN git clone https://github.com/ga4gh/server.git /srv/ga4gh/server
 
-# Install server from source
-
 WORKDIR /srv/ga4gh/server
 
 # Configure the python requirements as a separate step
 # prior to the build so that changes to the GA4GH Server
 # codebase do not trigger a full rebuild of the pip requirements.
-RUN pip install -r requirements.txt \
-    && python setup.py install
+RUN pip install -r requirements.txt
+
+# Install server from source
+RUN python setup.py install
 
 # Write configuration files
 COPY application.wsgi /srv/ga4gh/application.wsgi
