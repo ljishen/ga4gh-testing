@@ -9,7 +9,6 @@ RUN apt-get update \
     && apt-get install -y \
         python-dev \
         python-pip \
-        python-virtualenv \
         zlib1g-dev \
         libxslt1-dev \
         libffi-dev \
@@ -26,21 +25,21 @@ RUN mkdir /var/cache/apache2/python-egg-cache \
 
 # Create a directory to hold the GA4GH server code and configurations
 RUN mkdir /srv/ga4gh
-WORKDIR /srv/ga4gh
 
 # Clone the source code
-RUN git clone https://github.com/ga4gh/server.git
-
-# Make a virtualenv and install sphinx
-RUN virtualenv ga4gh-server-env \
-    && /bin/bash -c "source ga4gh-server-env/bin/activate" \
-    && pip install sphinx
+RUN git clone https://github.com/ga4gh/server.git /srv/ga4gh
 
 # Install server from source
-WORKDIR /srv/ga4gh/server
-RUN python setup.py install
 
-# Create configuration files
+WORKDIR /srv/ga4gh/server
+
+# Configure the python requirements as a separate step
+# prior to the build so that changes to the GA4GH Server
+# codebase do not trigger a full rebuild of the pip requirements.
+RUN pip install -r requirements.txt \
+    && python setup.py install
+
+# Write configuration files
 COPY application.wsgi /srv/ga4gh/application.wsgi
 COPY config.py /srv/ga4gh/config.py
 COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
