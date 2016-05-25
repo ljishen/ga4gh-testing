@@ -23,11 +23,8 @@ RUN apt-get update \
 RUN mkdir /var/cache/apache2/python-egg-cache \
     && chown www-data:www-data /var/cache/apache2/python-egg-cache/
 
-# Create a directory to hold the GA4GH server code and configurations
-RUN mkdir /srv/ga4gh
-
 # Clone the source code
-RUN git clone https://github.com/ga4gh/server.git /srv/ga4gh
+RUN git clone https://github.com/ga4gh/server.git /srv/ga4gh/server
 
 # Install server from source
 
