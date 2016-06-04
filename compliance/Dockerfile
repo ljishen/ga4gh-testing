@@ -16,7 +16,7 @@ RUN apt-get update \
         oracle-java8-set-default
 
 # Install other pre-requisite packages
-RUN apt-get install -y git curl
+RUN apt-get install -y git curl unzip
 
 # Install Apache Maven
 WORKDIR /root
