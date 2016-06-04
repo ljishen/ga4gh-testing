@@ -1,0 +1,12 @@
+---
+- name: Launch Docker Container
+  docker:
+    image: ljishen/ga4gh-compliance
+    name: ga4gh_compliance
+    state: reloaded
+    pull: always
+    restart_policy: on-failure
+    volumes: "{{ master_host_container_volume_dir }}/testresults:/root/compliance/testdir/testresults:rw"
+    command: >
+        --ctk.tgt.urlRoot=http://{{ groups['server'][0] }}
+        --ctk.tgt.dataset_id={{ compliance_dataset_id }}

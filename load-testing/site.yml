@@ -16,6 +16,9 @@
 - name: Run Compliance Test Suite
   hosts: master
   become: yes
+  gather_facts: no
+  roles:
+    - { role: compliance_tests }
 
 - name: Run Locust
   hosts: locust
@@ -35,14 +38,19 @@
     - { role: locust_standalone, when: num_slaves | int == 0 }
     - { role: locust_distributed, when: num_slaves | int != 0 }
 
-- name: Aquire Stats File Suffix
+
+# TODO:
+#   - Get compliance source code commit hash (Use template?)
+#   - Move compliance testresults to HTTP Server folder
+
+- name: Get Stats File Suffix
   hosts: server
   become: yes
   gather_facts: no
   roles:
     - { role: query_commit_hash, when: groups.slave | length == 0 }
 
-- name: Move Locust Stats File to HTTP Serfver
+- name: Move Locust Stats File to HTTP Server
   hosts: master
   gather_facts: no
   tasks:

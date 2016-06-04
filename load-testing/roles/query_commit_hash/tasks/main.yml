@@ -1,3 +1,4 @@
+---
 - name: Query Server Container ID
   command: docker ps -aqf name={{ server_container_name }}
   register: server_container_id
