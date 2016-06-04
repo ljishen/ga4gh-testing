@@ -13,6 +13,9 @@
   roles:
     - { role: server, when: deploy_server }
 
+- name: Run Compliance Test Suite
+  hosts: master
+  become: yes
 
 - name: Run Locust
   hosts: locust
