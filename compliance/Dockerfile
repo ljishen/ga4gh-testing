@@ -26,7 +26,7 @@ ENV PATH /root/apache-maven-3.3.9/bin:$PATH
 # Install Compliance Suite
 RUN git clone https://github.com/ga4gh/compliance.git
 WORKDIR /root/compliance
-RUN mvn clean install
+RUN mvn clean install \
     && unzip -ou dist/target/ga4gh-ctk-cli.zip -d tests
 
 # Clean Up
