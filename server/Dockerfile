@@ -13,7 +13,6 @@ RUN apt-get update \
         libxslt1-dev \
         libffi-dev \
         libssl-dev \
-        libcurl4-openssl-dev \
         apache2 \
         libapache2-mod-wsgi \
         git
