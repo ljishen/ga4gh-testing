@@ -1,0 +1,1 @@
+# SAMtoolsSamtools is a suite of programs for interacting with high-throughput sequencing data.This image contains Samtools built from [source](http://www.htslib.org/download/). See [installation instruction](https://github.com/samtools/samtools/blob/develop/INSTALL).

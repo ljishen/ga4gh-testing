@@ -1,0 +1,147 @@
+---
+- name: Initialize An Empty Registry Database
+  docker:
+    image: "{{ server_image_name }}"
+    name: "{{ server_container_name }}"
+    state: reloaded
+    pull: always
+    restart_policy: on-failure
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        /usr/local/bin/ga4gh_repo
+            init
+            /data/{{ registry_db_filename }}
+      
+- name: Add A Dataset to The Registry
+  docker:
+    image: "{{ server_image_name }}" 
+    name: "{{ server_container_name }}"
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        /usr/local/bin/ga4gh_repo
+            add-dataset
+            /data/{{ registry_db_filename }}
+            1kgenomes
+            --description "Variants from the 1000 Genomes project and GENCODE genes annotations"
+
+- name: Download Reference Assembly
+  docker:
+    image: "{{ utility_image_name }}"
+    name: "{{ utility_container_name }}"
+    state: reloaded
+    pull: always
+    restart_policy: on-failure
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        wget -O /data/{{ reference_assembly_source_name }} {{ reference_assembly_source_uri }}
+    when: 
+
+- name: Decompress Reference Assembly
+  unarchive:
+    src: "{{ server_volume_host_dir }}/{{ reference_assembly_source_name }}"
+    dest: "{{ server_volume_host_dir }}/{{ reference_assembly_filename }}"
+    copy: no
+
+- name: Recompress Reference Assembly Using `bgzip` 
+  docker:
+    image: "{{ utility_image_name }}"
+    name: "{{ utility_container_name }}"
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        /usr/local/bin/bgzip
+            /data/{{ reference_assembly_filename }}
+
+- name: Add Reference Set to Registry
+  docker:
+    image: "{{ server_image_name }}" 
+    name: "{{ server_container_name }}"
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        /usr/local/bin/ga4gh_repo
+            add-referenceset
+            /data/{{ registry_db_filename }}
+            /data/{{ reference_assembly_source_name }}
+            -d "{{ reference_assembly_name }} assembly of the human genome"
+            --ncbiTaxonId 9606
+            --name {{ reference_assembly_name }}
+            --sourceUri "{{ reference_assembly_source_uri }}" 
+
+- name: Download Sequence Ontology
+  get_url:
+    url: "{{ sequence_ontology_uri }}"
+    dest: "{{ server_volume_host_dir }}/{{ sequence_ontology_source_name }}"
+
+- name: Add Sequence Ontology
+  docker:
+    image: "{{ server_image_name }}"
+    name: "{{ server_container_name }}"
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        /usr/local/bin/ga4gh_repo
+            add-ontology
+            /data/{{ registry_db_filename }}
+            /data/{{ sequence_ontology_source_name }}
+            -n {{ sequence_ontology_name }}
+
+- name: Download Sequence Annotations
+  get_url:
+    url: "{{ sequence_annotations_uri }}"
+    dest: "{{ server_volume_host_dir }}/{{ sequence_annotations_source_name }}"
+
+- name: Add Sequence Annotations
+  docker:
+    image: "{{ server_image_name }}"
+    name: "{{ server_container_name }}"
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        /usr/local/bin/ga4gh_repo
+            add-featureset
+            /data/{{ registry_db_filename }}
+            1kgenomes
+            data/{{ sequence_annotations_source_name }}
+            --referenceSetName {{ reference_assembly_name }}
+            --ontologyName {{ sequence_ontology_name }}
+
+- name: Download 1000 Genomes VCFs
+  docker:
+    image: ljishen/samtools
+    name: "samtools"
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        /usr/bin/wget
+            -m {{ vcfs_uri }}
+            -nd -P /data/{{ vcfs_source_folder_name }} -l 1
+        && /bin/rm /data/{{ vcfs_source_folder_name }}/{{ unsupported_wgs_filename }} # See http://ga4gh-reference-implementation.readthedocs.io/en/latest/demo.html#add-the-1000-genomes-vcfs
+
+- name: Add 1000 Genomes VCFs
+  docker:
+    image: "{{ server_image_name }}"
+    name: "{{ server_container_name }}"
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        /usr/local/bin/ga4gh_repo
+            add-variantset
+            /data/{{ registry_db_filename }}
+            1kgenomes
+            /data/{{ vcfs_source_folder_name }}
+            --name phase3-release
+            --referenceSetName {{ reference_assembly_name }}
+            
+- name: Download a Read Group Set
+  get_url:
+    url: "{{ read_group_set_index_uri }}"
+    dest: "{{ server_volume_host_dir }}/{{ read_group_set_index_source_name }}"
+
+- name: Add a BAM as a Read Group Set
+  docker:
+    image: "{{ server_image_name }}"
+    name: "{{ server_container_name }}"
+    volumes: "{{ server_volume_host_dir }}:/data:rw"
+    command: >
+        /usr/local/bin/ga4gh_repo
+            add-readgroupset
+            /data/{{ registry_db_filename }}
+            1kgenomes
+            -I /data/{{ read_group_set_index_source_name }}
+            --referenceSetName {{ reference_assembly_name }}
+            {{ read_group_set_bam_uri }}

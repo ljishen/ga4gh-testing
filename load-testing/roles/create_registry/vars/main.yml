@@ -1,0 +1,25 @@
+---
+# Reference Assembly
+reference_assembly_source_uri: ftp://anonymous@ftp.1000genomes.ebi.ac.uk//vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
+reference_assembly_source_name: hs37d5.fa.gz
+reference_assembly_filename: hs37d5.fa
+reference_assembly_name: NCBI37
+
+# Sequence Ontology
+sequence_ontology_uri: https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/so-xp.obo
+sequence_ontology_source_name: so-xp.obo
+sequence_ontology_name: so-xp
+
+# Sequence Annotations
+sequence_annotations_uri: https://ga4ghstore.blob.core.windows.net/testing/gencode_v24lift37.db
+sequence_annotations_source_name: gencode_v24lift37.db
+
+# 1000 Genomes VCFs
+vcfs_uri: ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/
+unsupported_wgs_filename: ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz
+vcfs_source_folder_name: release
+
+# Read Group Set
+read_group_set_index_uri: http://s3.amazonaws.com/1000genomes/phase3/data/HG00096/alignment/HG00096.mapped.ILLUMINA.bwa.GBR.low_coverage.20120522.bam.bai
+read_group_set_index_source_name: HG00096.mapped.ILLUMINA.bwa.GBR.low_coverage.20120522.bam.bai
+read_group_set_bam_uri: http://s3.amazonaws.com/1000genomes/phase3/data/HG00096/alignment/HG00096.mapped.ILLUMINA.bwa.GBR.low_coverage.20120522.bam
