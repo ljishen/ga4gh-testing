@@ -11,7 +11,7 @@
   docker:
     image: ljishen/locust
     name: "{{ container_name }}"
-    state: reloaded
+    state: restarted
     pull: always
     restart_policy: on-failure
     expose:
@@ -22,9 +22,9 @@
       - "{{ master_slave_port }}:{{ master_slave_port }}"
       - "{{ master_slave_port | int + 1 }}:{{ master_slave_port | int + 1 }}" # locust will use the port specified, as well as the port number +1
       - "8089:8089"
-    volumes: "{{ master_host_container_volume_dir }}/{{ locust_filename }}:/root/{{ locust_filename }}:ro"
+    volumes: "{{ locust_volume_host_dir }}/{{ locust_filename }}:/root/{{ locust_filename }}:ro"
     command: > 
         /usr/local/bin/locust
-          -f /root/{{ locust_filename }}
-          --host=http://{{ groups['server'][0] }}
-          {{ locust_args }}
+            -f /root/{{ locust_filename }}
+            --host=http://{{ groups['server'][0] }}/ga4gh
+            {{ locust_args }}

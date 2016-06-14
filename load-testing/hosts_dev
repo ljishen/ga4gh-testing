@@ -5,7 +5,7 @@
 # Add slave nodes if you want to run load tests
 # distributed across multiple nodes
 [slave]
-192.168.140.81      ansible_ssh_user=issdm
+#192.168.140.81      ansible_ssh_user=issdm
 
 [locust:children]
 master

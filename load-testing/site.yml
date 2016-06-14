@@ -10,7 +10,18 @@
   hosts: server
   become: yes
   gather_facts: no
+
+  vars:
+    server_volume_host_dir: "{{ volume_host_dir }}/srv/data"
+    server_image_name: "macieksmuga/ga4gh-server-m2:docker2"
+    registry_db_filename: registry.db
+
+  pre_tasks:
+    - stat: path={{ server_volume_host_dir }}/{{ registry_db_filename }}
+      register: registry_db
+
   roles:
+    - { role: create_registry, when: deploy_server and (not registry_db.stat.exists) }
     - { role: server, when: deploy_server }
 
 - name: Run Compliance Test Suite
@@ -31,7 +42,7 @@
 
   pre_tasks:
     - name: Download locustfile
-      get_url: url={{ locustfile_url }} dest={{ master_host_container_volume_dir }}/{{ locust_filename }} force=yes
+      get_url: url={{ locustfile_url }} dest={{ locust_volume_host_dir }}/{{ locust_filename }} force=yes
       when: locustfile_url is defined
 
   roles:
@@ -58,6 +69,6 @@
       fetch:
         fail_on_missing: yes
         flat: yes
-        src: "{{ master_host_container_volume_dir }}/{{ locust_stats_filename }}"
+        src: "{{ locust_volume_host_dir }}/{{ locust_stats_filename }}"
         dest: "{{ file_server_dir }}/locust_stats_file_{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}.log"
       when: groups.slave | length == 0
