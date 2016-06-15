@@ -24,32 +24,44 @@
             1kgenomes
             --description "Variants from the 1000 Genomes project and GENCODE genes annotations"
 
+- name: Check Reference Assembly Source File
+  stat: path={{ server_volume_host_dir }}/{{ reference_assembly_source_name }}
+  register: reference_assembly_source_file
+
 - name: Download Reference Assembly
-  docker:
-    image: "{{ utility_image_name }}"
-    name: "{{ utility_container_name }}"
-    state: reloaded
-    pull: always
-    restart_policy: on-failure
-    volumes: "{{ server_volume_host_dir }}:/data:rw"
-    command: >
-        wget -O /data/{{ reference_assembly_source_name }} {{ reference_assembly_source_uri }}
-    when: 
+  # TODO: figure out the reason why download failed by using get_url module
+  command: >
+    wget -O {{ server_volume_host_dir }}/{{ reference_assembly_source_name }}
+        {{ reference_assembly_source_uri }}
+  when: not reference_assembly_source_file.stat.exists
+
+- name: Check Reference Assembly File
+  stat: path={{ server_volume_host_dir }}/{{ reference_assembly_filename }}
+  register: reference_assembly_file
 
 - name: Decompress Reference Assembly
-  unarchive:
-    src: "{{ server_volume_host_dir }}/{{ reference_assembly_source_name }}"
-    dest: "{{ server_volume_host_dir }}/{{ reference_assembly_filename }}"
-    copy: no
+  
+  # Right now we have to use the command module to call gunzip
+  # because unarchive module does not support for .gz files
+  # (See https://github.com/ansible/ansible-modules-core/issues/3241).
+  command: >
+    gunzip -q {{ server_volume_host_dir }}/{{ reference_assembly_source_name }}
+  
+  # TODO: check failure reason
+  # {"changed": true, "cmd": ["gunzip", "-q", "/ga4gh/srv/data/hs37d5.fa.gz"], "delta": "0:07:08.555351", "end": "2016-06-14 22:46:41.641562", "failed": true, "rc": 2, "start": "2016-06-14 22:39:33.086211", "stderr": "", "stdout": "", "stdout_lines": [], "warnings": []}
+  ignore_errors: yes
+  
+  when: (not reference_assembly_file.stat.exists) or (not reference_assembly_source_file.stat.exists)
 
-- name: Recompress Reference Assembly Using `bgzip` 
+- name: Recompress Reference Assembly Using `bgzip`
   docker:
     image: "{{ utility_image_name }}"
     name: "{{ utility_container_name }}"
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
-        /usr/local/bin/bgzip
+        /usr/local/bin/bgzip -f --threads 4
             /data/{{ reference_assembly_filename }}
+  when: reference_assembly_file.stat.exists
 
 - name: Add Reference Set to Registry
   docker:
@@ -70,6 +82,7 @@
   get_url:
     url: "{{ sequence_ontology_uri }}"
     dest: "{{ server_volume_host_dir }}/{{ sequence_ontology_source_name }}"
+    force: no
 
 - name: Add Sequence Ontology
   docker:
@@ -87,6 +100,7 @@
   get_url:
     url: "{{ sequence_annotations_uri }}"
     dest: "{{ server_volume_host_dir }}/{{ sequence_annotations_source_name }}"
+    force: no
 
 - name: Add Sequence Annotations
   docker:
@@ -102,16 +116,18 @@
             --referenceSetName {{ reference_assembly_name }}
             --ontologyName {{ sequence_ontology_name }}
 
+- name: Check VSFs Source Folder
+  stat: path={{ server_volume_host_dir }}/{{ vcfs_source_folder_name }}
+  register: vcfs_source_folder
+
 - name: Download 1000 Genomes VCFs
-  docker:
-    image: ljishen/samtools
-    name: "samtools"
-    volumes: "{{ server_volume_host_dir }}:/data:rw"
-    command: >
-        /usr/bin/wget
-            -m {{ vcfs_uri }}
-            -nd -P /data/{{ vcfs_source_folder_name }} -l 1
-        && /bin/rm /data/{{ vcfs_source_folder_name }}/{{ unsupported_wgs_filename }} # See http://ga4gh-reference-implementation.readthedocs.io/en/latest/demo.html#add-the-1000-genomes-vcfs
+  command: >
+    wget -m {{ vcfs_uri }}
+        -nd -P {{ server_volume_host_dir }}/{{ vcfs_source_folder_name }} -l 1
+        && rm {{ server_volume_host_dir }}/{{ vcfs_source_folder_name }}/{{ unsupported_wgs_filename }}
+        # See http://ga4gh-reference-implementation.readthedocs.io/en/latest/demo.html#add-the-1000-genomes-vcfs
+        # for the reason to remove unsupported wgs file
+  when: not vcfs_source_folder.stat.exists
 
 - name: Add 1000 Genomes VCFs
   docker:
@@ -131,6 +147,7 @@
   get_url:
     url: "{{ read_group_set_index_uri }}"
     dest: "{{ server_volume_host_dir }}/{{ read_group_set_index_source_name }}"
+    force: no
 
 - name: Add a BAM as a Read Group Set
   docker:

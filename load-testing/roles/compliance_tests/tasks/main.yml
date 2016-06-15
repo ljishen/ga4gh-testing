@@ -6,7 +6,7 @@
     state: reloaded
     pull: always
     restart_policy: on-failure
-    volumes: "{{ volume_host_dir }}/compliance/testresults:/root/compliance/testdir/testresults:rw"
+    volumes: "{{ volume_host_dir }}/{{ test_results_folder_name }}/compliance:/root/compliance/testdir/testresults:rw"
     command: >
         --ctk.tgt.urlRoot=http://{{ groups['server'][0] }}/ga4gh
         --ctk.tgt.dataset_id={{ compliance_dataset_id }}

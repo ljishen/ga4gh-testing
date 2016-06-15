@@ -6,7 +6,7 @@
     state: reloaded
     pull: always
     restart_policy: on-failure
-    volumes: "{{ server_volume_host_dir }}/{{ data_source_folder }}:/data:ro"
+    volumes: "{{ server_volume_host_dir }}:/data:ro"
     ports: 80:80
     env:
       GA4GH_DEBUG: True

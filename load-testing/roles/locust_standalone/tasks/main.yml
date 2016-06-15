@@ -9,17 +9,17 @@
 - name: Run Load Testing
   shell: >
     docker run \
-      -v {{ locust_volume_host_dir }}:/root  \
+      -v {{ volume_host_dir }}:/root  \
       --name {{ container_name }} \
       ljishen/locust  \
       /usr/local/bin/locust \
-        -f /root/{{ locust_filename }} \
+        -f /root/{{ locust_folder_name }}/{{ locust_filename }} \
         --host=http://{{ groups['server'][0] }}/ga4gh \
         --no-web --only-summary \
-        --logfile {{ locust_log_filename }} \
+        --logfile {{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_log_filename }} \
         -c {{ num_clients }} \
         -r {{ hatch_rate }} \
         -n {{ num_requests }} \
-            >{{ locust_volume_host_dir }}/{{ locust_stats_filename }} \
+            >{{ volume_host_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }} \
             2>&1
   ignore_errors: yes
