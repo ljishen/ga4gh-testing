@@ -1,4 +1,8 @@
 ---
+- name: Check Registry DB File
+  stat: path={{ server_volume_host_dir }}/{{ registry_db_filename }}
+  register: registry_db_file
+
 - name: Initialize An Empty Registry Database
   docker:
     image: "{{ server_image_name }}"
@@ -11,6 +15,7 @@
         /usr/local/bin/ga4gh_repo
             init
             /data/{{ registry_db_filename }}
+  when: (not registry_db_file.stat.exists) or recreate_registry_db
       
 - name: Add A Dataset to The Registry
   docker:
@@ -23,6 +28,7 @@
             /data/{{ registry_db_filename }}
             1kgenomes
             --description "Variants from the 1000 Genomes project and GENCODE genes annotations"
+  when: (not registry_db_file.stat.exists) or recreate_registry_db
 
 - name: Check Reference Assembly Source File
   stat: path={{ server_volume_host_dir }}/{{ reference_assembly_source_name }}
@@ -33,11 +39,7 @@
   command: >
     wget -O {{ server_volume_host_dir }}/{{ reference_assembly_source_name }}
         {{ reference_assembly_source_uri }}
-  when: not reference_assembly_source_file.stat.exists
-
-- name: Check Reference Assembly File
-  stat: path={{ server_volume_host_dir }}/{{ reference_assembly_filename }}
-  register: reference_assembly_file
+  when: (not reference_assembly_source_file.stat.exists) or recreate_registry_db
 
 - name: Decompress Reference Assembly
   
@@ -45,13 +47,17 @@
   # because unarchive module does not support for .gz files
   # (See https://github.com/ansible/ansible-modules-core/issues/3241).
   command: >
-    gunzip -q {{ server_volume_host_dir }}/{{ reference_assembly_source_name }}
+    gunzip -qf {{ server_volume_host_dir }}/{{ reference_assembly_source_name }}
   
   # TODO: check failure reason
   # {"changed": true, "cmd": ["gunzip", "-q", "/ga4gh/srv/data/hs37d5.fa.gz"], "delta": "0:07:08.555351", "end": "2016-06-14 22:46:41.641562", "failed": true, "rc": 2, "start": "2016-06-14 22:39:33.086211", "stderr": "", "stdout": "", "stdout_lines": [], "warnings": []}
   ignore_errors: yes
   
-  when: (not reference_assembly_file.stat.exists) or (not reference_assembly_source_file.stat.exists)
+  when: (not reference_assembly_source_file.stat.exists) or recreate_registry_db
+
+- name: Check Reference Assembly File
+  stat: path={{ server_volume_host_dir }}/{{ reference_assembly_filename }}
+  register: reference_assembly_file
 
 - name: Recompress Reference Assembly Using `bgzip`
   docker:
@@ -77,6 +83,7 @@
             --ncbiTaxonId 9606
             --name {{ reference_assembly_name }}
             --sourceUri "{{ reference_assembly_source_uri }}" 
+  when: (not registry_db_file.stat.exists) or recreate_registry_db
 
 - name: Download Sequence Ontology
   get_url:
@@ -95,6 +102,7 @@
             /data/{{ registry_db_filename }}
             /data/{{ sequence_ontology_source_name }}
             -n {{ sequence_ontology_name }}
+  when: (not registry_db_file.stat.exists) or recreate_registry_db
 
 - name: Download Sequence Annotations
   get_url:
@@ -112,9 +120,10 @@
             add-featureset
             /data/{{ registry_db_filename }}
             1kgenomes
-            data/{{ sequence_annotations_source_name }}
+            /data/{{ sequence_annotations_source_name }}
             --referenceSetName {{ reference_assembly_name }}
             --ontologyName {{ sequence_ontology_name }}
+  when: (not registry_db_file.stat.exists) or recreate_registry_db
 
 - name: Check VSFs Source Folder
   stat: path={{ server_volume_host_dir }}/{{ vcfs_source_folder_name }}
@@ -124,9 +133,9 @@
   command: >
     wget -m {{ vcfs_uri }}
         -nd -P {{ server_volume_host_dir }}/{{ vcfs_source_folder_name }} -l 1
-        && rm {{ server_volume_host_dir }}/{{ vcfs_source_folder_name }}/{{ unsupported_wgs_filename }}
+        --reject "{{ unsupported_wgs_filename_prefix }}*"
         # See http://ga4gh-reference-implementation.readthedocs.io/en/latest/demo.html#add-the-1000-genomes-vcfs
-        # for the reason to remove unsupported wgs file
+        # for the reason to exclude the unsupported wgs files
   when: not vcfs_source_folder.stat.exists
 
 - name: Add 1000 Genomes VCFs
@@ -142,6 +151,7 @@
             /data/{{ vcfs_source_folder_name }}
             --name phase3-release
             --referenceSetName {{ reference_assembly_name }}
+  when: (not registry_db_file.stat.exists) or recreate_registry_db
             
 - name: Download a Read Group Set
   get_url:
@@ -162,3 +172,4 @@
             -I /data/{{ read_group_set_index_source_name }}
             --referenceSetName {{ reference_assembly_name }}
             {{ read_group_set_bam_uri }}
+  when: (not registry_db_file.stat.exists) or recreate_registry_db

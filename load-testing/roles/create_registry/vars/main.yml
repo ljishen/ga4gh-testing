@@ -16,10 +16,13 @@ sequence_annotations_source_name: gencode_v24lift37.db
 
 # 1000 Genomes VCFs
 vcfs_uri: ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/
-unsupported_wgs_filename: ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz
+unsupported_wgs_filename_prefix: ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz
 vcfs_source_folder_name: release
 
 # Read Group Set
 read_group_set_index_uri: http://s3.amazonaws.com/1000genomes/phase3/data/HG00096/alignment/HG00096.mapped.ILLUMINA.bwa.GBR.low_coverage.20120522.bam.bai
 read_group_set_index_source_name: HG00096.mapped.ILLUMINA.bwa.GBR.low_coverage.20120522.bam.bai
 read_group_set_bam_uri: http://s3.amazonaws.com/1000genomes/phase3/data/HG00096/alignment/HG00096.mapped.ILLUMINA.bwa.GBR.low_coverage.20120522.bam
+
+# Debug
+recreate_registry_db: yes

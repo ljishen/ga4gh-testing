@@ -3,7 +3,7 @@
   hosts: all
   become: yes
   roles:
-    - { role: angstwad.docker_ubuntu, when: install_docker }
+    - { role: angstwad.docker_ubuntu, when: check_docker }
 
 
 - name: Deploy GA4GH Reference Server
@@ -41,6 +41,7 @@
   vars:
     num_slaves: "{{ groups.slave | length }}"
     container_name: "locust"
+    locustfile_url: https://raw.githubusercontent.com/ljishen/ga4gh-testing/master/load-testing/locustfile.py 
 
   pre_tasks:
     - name: Download locustfile
