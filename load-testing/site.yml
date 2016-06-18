@@ -44,6 +44,8 @@
     locustfile_url: https://raw.githubusercontent.com/ljishen/ga4gh-testing/master/load-testing/locustfile.py 
 
   pre_tasks:
+    - name: Ensure locustfile Directory Exists
+      file: path={{ volume_host_dir }}/{{ locust_folder_name }} state=directory
     - name: Download locustfile
       get_url: url={{ locustfile_url }} dest={{ volume_host_dir }}/{{ locust_folder_name }}/{{ locust_filename }} force=yes
       when: locustfile_url is defined

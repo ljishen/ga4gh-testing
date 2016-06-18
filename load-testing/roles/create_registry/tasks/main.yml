@@ -13,7 +13,7 @@
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
-            init
+        init -f
             /data/{{ registry_db_filename }}
   when: (not registry_db_file.stat.exists) or recreate_registry_db
       
@@ -21,6 +21,7 @@
   docker:
     image: "{{ server_image_name }}" 
     name: "{{ server_container_name }}"
+    state: reloaded
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
@@ -63,6 +64,7 @@
   docker:
     image: "{{ utility_image_name }}"
     name: "{{ utility_container_name }}"
+    state: reloaded
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/bgzip -f --threads 4
@@ -73,6 +75,7 @@
   docker:
     image: "{{ server_image_name }}" 
     name: "{{ server_container_name }}"
+    state: reloaded
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
@@ -95,6 +98,7 @@
   docker:
     image: "{{ server_image_name }}"
     name: "{{ server_container_name }}"
+    state: reloaded
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
@@ -114,6 +118,7 @@
   docker:
     image: "{{ server_image_name }}"
     name: "{{ server_container_name }}"
+    state: reloaded
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
@@ -142,6 +147,7 @@
   docker:
     image: "{{ server_image_name }}"
     name: "{{ server_container_name }}"
+    state: reloaded
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
@@ -163,6 +169,7 @@
   docker:
     image: "{{ server_image_name }}"
     name: "{{ server_container_name }}"
+    state: reloaded
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo

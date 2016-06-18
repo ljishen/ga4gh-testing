@@ -6,6 +6,9 @@
     state: absent
     pull: always
 
+- name: Ensure Locust Test Result Directory Exists
+  file: path={{ volume_host_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }} state=directory
+
 - name: Run Load Testing
   shell: >
     docker run \
