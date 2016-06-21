@@ -1,2 +1,6 @@
 ---
+compliance_tests_image_name: ljishen/ga4gh-compliance
+compliance_tests_container_name: ga4gh_compliance
+compliance_folder_name: compliance
+
 compliance_dataset_id: WyIxa2dlbm9tZXMiXQ

@@ -62,12 +62,12 @@
 
 - name: Recompress Reference Assembly Using `bgzip`
   docker:
-    image: "{{ utility_image_name }}"
-    name: "{{ utility_container_name }}"
+    image: ljishen/samtools
+    name: samtools
     state: reloaded
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
-        /usr/local/bin/bgzip -f --threads 4
+        /usr/local/bin/bgzip -f --threads {{ ansible_processor_cores }}
             /data/{{ reference_assembly_filename }}
   when: reference_assembly_file.stat.exists
 

@@ -1,12 +1,33 @@
 ---
-- name: Launch Docker Container
+- name: Launch Compliance Test Suite Container
   docker:
-    image: ljishen/ga4gh-compliance
-    name: ga4gh_compliance
+    image: "{{ compliance_tests_image_name }}"
+    name: "{{ compliance_tests_container_name }}"
+    state: reloaded
+    pull: always 
+
+- name: Query Compliance Tests Container ID
+  command: docker ps -qf name={{ compliance_tests_container_name }}
+  register: compliance_tests_container_id
+
+- name: Query Compliance Test Suite Latest Source Code Commit Hash
+  command: docker exec {{ compliance_tests_container_id.stdout }} git -C /root/compliance log -1 --pretty=format:%H
+  register: commit_hash
+
+- name: Ensure Test Results Directory Exists
+  file: path={{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ compliance_folder_name }}/{{ commit_hash.stdout }} state=directory
+
+- name: Run Compliance Tests
+  docker:
+    image: "{{ compliance_tests_image_name }}"
+    name: "{{ compliance_tests_container_name }}"
     state: reloaded
     pull: always
     restart_policy: on-failure
-    volumes: "{{ volume_host_dir }}/{{ test_results_folder_name }}/compliance:/root/compliance/testdir/testresults:rw"
+    
+    # We have no idea how to copy the entire directory to another location within the remote machine.
+    # Our current solution just mounts the destination directory as the volume for the container.
+    volumes: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ compliance_folder_name }}/{{ commit_hash.stdout }}:/root/compliance/testdir/testresults:rw"
     command: >
         --ctk.tgt.urlRoot=http://{{ groups['server'][0] }}/ga4gh
         --ctk.tgt.dataset_id={{ compliance_dataset_id }}

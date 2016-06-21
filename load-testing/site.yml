@@ -1,3 +1,12 @@
+# Directory Structure
+#
+# Server:
+#   - {{ volume_host_dir }}/srv/data:   For All Server Data
+# Master:
+#   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}_{{ locust_commit_hash }}:    For Locust Stats File
+#   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ compliance_folder_name }}/{{ compliance_tests_commit_hash }}:    For Compliance Tests Results
+#   - {{ volume_host_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}:    For Locust Stats File and Log File 
+
 - name: Install Docker on Server
   any_errors_fatal: true
   hosts: all
@@ -5,18 +14,14 @@
   roles:
     - { role: angstwad.docker_ubuntu, when: check_docker }
 
-
 - name: Deploy GA4GH Reference Server
   hosts: server
   become: yes
-  gather_facts: no
 
   vars:
     server_volume_host_dir: "{{ volume_host_dir }}/srv/data"
     server_image_name: "macieksmuga/ga4gh-server-m2:docker2"
     registry_db_filename: registry.db
-    utility_image_name: "ljishen/samtools"
-    utility_container_name: "samtools"
 
   pre_tasks:
     - stat: path={{ server_volume_host_dir }}/{{ registry_db_filename }}
@@ -26,10 +31,27 @@
     - { role: create_registry, when: recreate_registry_db or not registry_db.stat.exists }
     - { role: server, when: deploy_server }
 
+- name: Query Server Latest Source Code Commit Hash
+  hosts: server
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Query Server Container ID
+      command: docker ps -aqf name={{ server_container_name }}
+      register: server_container_id
+
+    - name: Query Commit Hash
+      command: docker exec {{ server_container_id.stdout }} git -C /srv/ga4gh/server log -1 --pretty=format:%H
+      register: commit_hash
+
 - name: Run Compliance Test Suite
   hosts: master
   become: yes
   gather_facts: no
+  
+  vars:
+    server_commit_hash: "{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}"
+
   roles:
     - { role: compliance_tests }
 
@@ -54,26 +76,22 @@
     - { role: locust_standalone, when: num_slaves | int == 0 }
     - { role: locust_distributed, when: num_slaves | int != 0 }
 
-
-# TODO:
-#   - Get compliance source code commit hash (Use template?)
-#   - Move compliance testresults to HTTP Server folder
-
-- name: Get Stats File Suffix
-  hosts: server
+- name: Copy Locust Stats File to File Server Directory
+  hosts: master
   become: yes
   gather_facts: no
-  roles:
-    - { role: query_commit_hash, when: groups.slave | length == 0 }
-
-- name: Move Locust Stats File to HTTP Server
-  hosts: master
-  gather_facts: no
+  
+  vars:
+    server_commit_hash: "{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}"
+ 
   tasks:
-    - name: Fetch Stats File from Master
-      fetch:
-        fail_on_missing: yes
-        flat: yes
-        src: "{{ volume_host_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }}"
-        dest: "{{ file_server_dir }}/locust_stats_file_{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}.log"
+    - block:
+        - name: Ensure Destination Directory Exists
+          file:
+            path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}"
+            state: directory
+        - name: Copy Stats File
+          command: >
+              cp -p {{ volume_host_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }}
+                {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}
       when: groups.slave | length == 0

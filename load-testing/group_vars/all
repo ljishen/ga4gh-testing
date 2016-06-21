@@ -1,5 +1,5 @@
 ---
-file_server_dir: /tmp/locust
+file_server_dir: /srv/http
 volume_host_dir: /ga4gh
 test_results_folder_name: testresults
 
