@@ -1,4 +1,7 @@
 ---
+# Dataset
+dataset_name: 1kgenomes
+
 # Reference Assembly
 reference_assembly_source_uri: ftp://ftp.1000genomes.ebi.ac.uk//vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
 reference_assembly_source_name: hs37d5.fa.gz
@@ -6,9 +9,8 @@ reference_assembly_filename: hs37d5.fa
 reference_assembly_name: NCBI37
 
 # Sequence Ontology
-sequence_ontology_uri: https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/so-xp.obo
-sequence_ontology_source_name: so-xp.obo
-sequence_ontology_name: so-xp
+sequence_ontology_file_path: /srv/ga4gh/server/tests/data/ontologymaps/sequence_ontology/sequence_ontology.txt 
+sequence_ontology_name: sequence_ontology
 
 # Sequence Annotations
 sequence_annotations_uri: https://ga4ghstore.blob.core.windows.net/testing/gencode_v24lift37.db
@@ -26,3 +28,5 @@ read_group_set_bam_uri: http://s3.amazonaws.com/1000genomes/phase3/data/HG00096/
 
 # Debug
 recreate_registry_db: no
+update_reference_assembly: no
+update_genomes_vcfs: no

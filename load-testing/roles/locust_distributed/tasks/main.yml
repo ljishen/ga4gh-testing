@@ -11,7 +11,7 @@
   docker:
     image: ljishen/locust
     name: "{{ container_name }}"
-    state: restarted
+    state: reloaded
     pull: always
     restart_policy: on-failure
     expose:

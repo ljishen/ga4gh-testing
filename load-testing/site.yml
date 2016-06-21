@@ -37,7 +37,7 @@
   gather_facts: no
   tasks:
     - name: Query Server Container ID
-      command: docker ps -aqf name={{ server_container_name }}
+      command: docker ps -aqfl name={{ server_container_name }}
       register: server_container_id
 
     - name: Query Commit Hash
@@ -76,6 +76,7 @@
     - { role: locust_standalone, when: num_slaves | int == 0 }
     - { role: locust_distributed, when: num_slaves | int != 0 }
 
+# TODO: Think About How to Add The Version of Locust Stats File
 - name: Copy Locust Stats File to File Server Directory
   hosts: master
   become: yes

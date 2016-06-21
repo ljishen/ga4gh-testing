@@ -8,6 +8,7 @@
     image: "{{ server_image_name }}"
     name: "{{ server_container_name }}"
     state: reloaded
+    detach: False
     pull: always
     restart_policy: on-failure
     volumes: "{{ server_volume_host_dir }}:/data:rw"
@@ -22,12 +23,13 @@
     image: "{{ server_image_name }}" 
     name: "{{ server_container_name }}"
     state: reloaded
+    detach: False
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
             add-dataset
             /data/{{ registry_db_filename }}
-            1kgenomes
+            {{ dataset_name }}
             --description "Variants from the 1000 Genomes project and GENCODE genes annotations"
   when: (not registry_db_file.stat.exists) or recreate_registry_db
 
@@ -40,7 +42,7 @@
   command: >
     wget -O {{ server_volume_host_dir }}/{{ reference_assembly_source_name }}
         {{ reference_assembly_source_uri }}
-  when: (not reference_assembly_source_file.stat.exists) or recreate_registry_db
+  when: (not reference_assembly_source_file.stat.exists) or update_reference_assembly
 
 - name: Decompress Reference Assembly
   
@@ -54,7 +56,7 @@
   # {"changed": true, "cmd": ["gunzip", "-q", "/ga4gh/srv/data/hs37d5.fa.gz"], "delta": "0:07:08.555351", "end": "2016-06-14 22:46:41.641562", "failed": true, "rc": 2, "start": "2016-06-14 22:39:33.086211", "stderr": "", "stdout": "", "stdout_lines": [], "warnings": []}
   ignore_errors: yes
   
-  when: (not reference_assembly_source_file.stat.exists) or recreate_registry_db
+  when: (not reference_assembly_source_file.stat.exists) or update_reference_assembly
 
 - name: Check Reference Assembly File
   stat: path={{ server_volume_host_dir }}/{{ reference_assembly_filename }}
@@ -65,6 +67,7 @@
     image: ljishen/samtools
     name: samtools
     state: reloaded
+    detach: False
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/bgzip -f --threads {{ ansible_processor_cores }}
@@ -76,35 +79,31 @@
     image: "{{ server_image_name }}" 
     name: "{{ server_container_name }}"
     state: reloaded
+    detach: False
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
             add-referenceset
-            /data/{{ registry_db_filename }}
-            /data/{{ reference_assembly_source_name }}
+            --name {{ reference_assembly_name }}
             -d "{{ reference_assembly_name }} assembly of the human genome"
             --ncbiTaxonId 9606
-            --name {{ reference_assembly_name }}
             --sourceUri "{{ reference_assembly_source_uri }}" 
+            /data/{{ registry_db_filename }}
+            /data/{{ reference_assembly_source_name }}
   when: (not registry_db_file.stat.exists) or recreate_registry_db
-
-- name: Download Sequence Ontology
-  get_url:
-    url: "{{ sequence_ontology_uri }}"
-    dest: "{{ server_volume_host_dir }}/{{ sequence_ontology_source_name }}"
-    force: no
 
 - name: Add Sequence Ontology
   docker:
     image: "{{ server_image_name }}"
     name: "{{ server_container_name }}"
     state: reloaded
+    detach: False
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
             add-ontology
             /data/{{ registry_db_filename }}
-            /data/{{ sequence_ontology_source_name }}
+            {{ sequence_ontology_file_path }}
             -n {{ sequence_ontology_name }}
   when: (not registry_db_file.stat.exists) or recreate_registry_db
 
@@ -119,18 +118,18 @@
     image: "{{ server_image_name }}"
     name: "{{ server_container_name }}"
     state: reloaded
+    detach: False
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
             add-featureset
-            /data/{{ registry_db_filename }}
-            1kgenomes
-            /data/{{ sequence_annotations_source_name }}
             --referenceSetName {{ reference_assembly_name }}
-            --ontologyName {{ sequence_ontology_name }}
+            /data/{{ registry_db_filename }}
+            {{ dataset_name }}
+            /data/{{ sequence_annotations_source_name }}
   when: (not registry_db_file.stat.exists) or recreate_registry_db
 
-- name: Check VSFs Source Folder
+- name: Check VCFs Data Folder
   stat: path={{ server_volume_host_dir }}/{{ vcfs_source_folder_name }}
   register: vcfs_source_folder
 
@@ -141,22 +140,23 @@
         --reject "{{ unsupported_wgs_filename_prefix }}*"
         # See http://ga4gh-reference-implementation.readthedocs.io/en/latest/demo.html#add-the-1000-genomes-vcfs
         # for the reason to exclude the unsupported wgs files
-  when: not vcfs_source_folder.stat.exists
+  when: (not vcfs_source_folder.stat.exists) or update_genomes_vcfs
 
 - name: Add 1000 Genomes VCFs
   docker:
     image: "{{ server_image_name }}"
     name: "{{ server_container_name }}"
     state: reloaded
+    detach: False
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
             add-variantset
-            /data/{{ registry_db_filename }}
-            1kgenomes
-            /data/{{ vcfs_source_folder_name }}
             --name phase3-release
             --referenceSetName {{ reference_assembly_name }}
+            /data/{{ registry_db_filename }}
+            {{ dataset_name }}
+            /data/{{ vcfs_source_folder_name }}
   when: (not registry_db_file.stat.exists) or recreate_registry_db
             
 - name: Download a Read Group Set
@@ -170,12 +170,13 @@
     image: "{{ server_image_name }}"
     name: "{{ server_container_name }}"
     state: reloaded
+    detach: False
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
         /usr/local/bin/ga4gh_repo
             add-readgroupset
             /data/{{ registry_db_filename }}
-            1kgenomes
+            {{ dataset_name }}
             -I /data/{{ read_group_set_index_source_name }}
             --referenceSetName {{ reference_assembly_name }}
             {{ read_group_set_bam_uri }}
