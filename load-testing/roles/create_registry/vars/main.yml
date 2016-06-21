@@ -25,4 +25,4 @@ read_group_set_index_source_name: HG00096.mapped.ILLUMINA.bwa.GBR.low_coverage.2
 read_group_set_bam_uri: http://s3.amazonaws.com/1000genomes/phase3/data/HG00096/alignment/HG00096.mapped.ILLUMINA.bwa.GBR.low_coverage.20120522.bam
 
 # Debug
-recreate_registry_db: yes
+recreate_registry_db: no

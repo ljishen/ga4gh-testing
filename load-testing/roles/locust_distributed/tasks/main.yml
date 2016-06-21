@@ -7,7 +7,7 @@
   set_fact: locust_args="--slave --master-port={{ master_slave_port }} --master-host={{ groups['master'][0] }}"
   when: inventory_hostname in groups['slave']
 
-- name: Run Load Testing
+- name: Launch Locust’s Web Interface
   docker:
     image: ljishen/locust
     name: "{{ container_name }}"
