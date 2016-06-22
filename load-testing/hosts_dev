@@ -2,10 +2,11 @@
 [master]
 192.168.140.2       ansible_ssh_user=issdm
 
-# Add slave nodes if you want to run load tests
-# distributed across multiple nodes
+# Add slave nodes if you want to run load
+# testing istributed across multiple nodes.
 [slave]
 192.168.140.81      ansible_ssh_user=issdm
+issdm-3             ansible_ssh_user=issdm
 
 [locust:children]
 master
