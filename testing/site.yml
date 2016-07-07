@@ -3,9 +3,9 @@
 # Server:
 #   - {{ volume_host_dir }}/srv/data:   For All Server Data
 # Master:
-#   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}_{{ locust_commit_hash }}:    For Locust Stats File
-#   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ compliance_folder_name }}/{{ compliance_tests_commit_hash }}:    For Compliance Tests Results
-#   - {{ volume_host_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}:    For Locust Stats File and Log File 
+#   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_commit_hash }}:    For Locust Stats File
+#   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ compliance_folder_name }}/{{ compliance_test_suite_commit_hash }}:    For Compliance Tests Results
+#   - {{ volume_host_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}:    For Locust Stats File and Log File
 
 - name: Install Docker on Server
   any_errors_fatal: true
@@ -66,6 +66,7 @@
     locustfile_url: https://raw.githubusercontent.com/ljishen/ga4gh-testing/master/load-testing/locustfile.py 
 
   pre_tasks:
+    - name: Query Commit Hash of locustfile.py
     - name: Ensure locustfile Directory Exists
       file: path={{ volume_host_dir }}/{{ locust_folder_name }} state=directory
     - name: Download locustfile
@@ -76,7 +77,6 @@
     - { role: locust_standalone, when: num_slaves | int == 0 }
     - { role: locust_distributed, when: num_slaves | int != 0 }
 
-# TODO: Think About How to Add The Version of Locust Stats File
 - name: Copy Locust Stats File to File Server Directory
   hosts: master
   become: yes
