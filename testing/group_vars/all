@@ -1,6 +1,6 @@
 ---
 file_server_dir: /srv/http
-volume_host_dir: /ga4gh
+ga4gh_working_dir: /ga4gh
 test_results_folder_name: testresults
 
 # Variables for Locust

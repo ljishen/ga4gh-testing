@@ -1,11 +1,11 @@
 # Directory Structure
 #
 # Server:
-#   - {{ volume_host_dir }}/srv/data:   For All Server Data
+#   - {{ ga4gh_working_dir }}/srv/data:   For All Server Data
 # Master:
-#   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_commit_hash }}:    For Locust Stats File
+#   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash }}:    For Locust Stats File
 #   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ compliance_folder_name }}/{{ compliance_test_suite_commit_hash }}:    For Compliance Tests Results
-#   - {{ volume_host_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}:    For Locust Stats File and Log File
+#   - {{ ga4gh_working_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}:    For Locust Stats File and Log File
 
 - name: Install Docker on Server
   any_errors_fatal: true
@@ -19,7 +19,7 @@
   become: yes
 
   vars:
-    server_volume_host_dir: "{{ volume_host_dir }}/srv/data"
+    server_volume_host_dir: "{{ ga4gh_working_dir }}/srv/data"
     server_image_name: "macieksmuga/ga4gh-server-m2:docker2"
     registry_db_filename: registry.db
 
@@ -55,6 +55,24 @@
   roles:
     - { role: compliance_tests }
 
+- name: Checkout and Query Hash of locustfile
+  hosts: master
+  gather_facts: no
+  tasks:
+    - name: Checkout the ga4gh-testing Repo (Ensure Updated)
+      git:
+        repo: https://github.com/ljishen/ga4gh-testing.git
+        dest: {{ ga4gh_working_dir }}
+        clone: yes
+        force: yes
+        update: yes
+    - name: Query SHA1 Hash
+      shell: >
+        git -C {{ ga4gh_working_dir }}/ga4gh_testing ls-files -s locust/{{ locust_filename }} | awk -F' ' '{ print $2 }' 
+      register: locustfile_hash
+    - fail: msg="Unable to get SHA1 hash of locustfile.py"
+      when: locustfile_hash.stdout is undefined 
+
 - name: Run Locust Testing
   hosts: locust
   become: yes
@@ -63,15 +81,17 @@
   vars:
     num_slaves: "{{ groups.slave | length }}"
     container_name: "locust"
-    locustfile_url: https://raw.githubusercontent.com/ljishen/ga4gh-testing/master/load-testing/locustfile.py 
 
   pre_tasks:
-    - name: Query Commit Hash of locustfile.py
     - name: Ensure locustfile Directory Exists
-      file: path={{ volume_host_dir }}/{{ locust_folder_name }} state=directory
-    - name: Download locustfile
-      get_url: url={{ locustfile_url }} dest={{ volume_host_dir }}/{{ locust_folder_name }}/{{ locust_filename }} force=yes
-      when: locustfile_url is defined
+      file: path={{ ga4gh_working_dir }}/{{ locust_folder_name }} state=directory
+    - name: Copy locustfile to Remote
+      synchronize:
+        src: {{ ga4gh_working_dir }}/ga4gh_testing/locust/{{ locust_filename }}
+        dest: {{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}
+        mode: push
+        times: yes
+      delegate_to: groups['master'][0]
 
   roles:
     - { role: locust_standalone, when: num_slaves | int == 0 }
@@ -84,15 +104,16 @@
   
   vars:
     server_commit_hash: "{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}"
+    locustfile_hash: "{{ hostvars[groups['master'][0]]['locustfile_hash']['stdout'] }}"
  
   tasks:
     - block:
         - name: Ensure Destination Directory Exists
           file:
-            path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}"
+            path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash }}"
             state: directory
         - name: Copy Stats File
           command: >
-              cp -p {{ volume_host_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }}
-                {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}
+              cp -p {{ ga4gh_working_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }}
+                {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash }}
       when: groups.slave | length == 0
