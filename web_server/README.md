@@ -1,0 +1,1 @@
+# Twisted Web ServerThis is a general-purpose web server which can serve from a filesystem or application resource.#### Usage```bashdocker run --rm -t \    -p 80:80 \    -v `pwd`:/root \    ljishen/twisted-web-server```You can change the port mapping and the directory which serves as the root of the web server.

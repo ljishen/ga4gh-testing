@@ -1,6 +1,6 @@
-# VERSION 1.0
+# VERSION 1.1
 
-FROM ubuntu:latest 
+FROM ubuntu:latest
 
 MAINTAINER Jianshen Liu <jliu120@ucsc.edu>
 
@@ -15,6 +15,9 @@ RUN apt-get update \
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# May need to increase the maximum number of open files
+# Consider to increase the maximum number of open files
 
 WORKDIR /root
+
+ENTRYPOINT ["locust"]
+CMD ["--help"]

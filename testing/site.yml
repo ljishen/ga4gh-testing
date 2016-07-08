@@ -103,8 +103,17 @@
   vars:
     num_slaves: "{{ groups.slave | length }}"
     container_name: "locust"
-#    locust_test_results_path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}"
 
   roles:
     - { role: locust_standalone, locust_test_results_path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}", when: num_slaves | int == 0 }
     - { role: locust_distributed, when: num_slaves | int != 0 }
+
+- name: Start File Server
+  docker:
+    image: ljishen/twisted-web-server
+    name: twisted-web-server
+    state: reloaded
+    pull: always
+    restart_policy: on-failure
+    ports: "{{ file_server_port }}:80"
+    volumes: "{{ file_server_dir }}:/root:ro"
