@@ -100,17 +100,20 @@
     - { role: locust_standalone, locust_test_results_path: "{{ file_server_root }}/{{ test_results_folder_name }}/server_{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}", when: num_slaves | int == 0 }
     - { role: locust_distributed, when: num_slaves | int != 0 }
 
-- name: Start File Server
+- name: Launch File Server
   hosts: master 
   become: yes
   gather_facts: no
   tasks:
-    - docker:
-        image: ljishen/twisted-web-server
-        name: twisted-web-server
-        state: reloaded
-        pull: always
-        restart_policy: on-failure
-        ports: "{{ file_server_port }}:80"
-        volumes: "{{ file_server_root }}:/root:ro"
+    - block:
+        - name: Delete "twistd.pid" in File Server Root
+          file: path={{ file_server_root }}/twistd.pid state=absent
+        - docker:
+            image: ljishen/twisted-web-server
+            name: twisted-web-server
+            state: reloaded
+            pull: always
+            restart_policy: on-failure
+            ports: "{{ file_server_port }}:80"
+            volumes: "{{ file_server_root }}:/root"
       when: groups.slave | length | int == 0
