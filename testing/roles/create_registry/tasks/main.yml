@@ -54,7 +54,7 @@
   
   # TODO: check failure reason
   # {"changed": true, "cmd": ["gunzip", "-q", "/ga4gh/srv/data/hs37d5.fa.gz"], "delta": "0:07:08.555351", "end": "2016-06-14 22:46:41.641562", "failed": true, "rc": 2, "start": "2016-06-14 22:39:33.086211", "stderr": "", "stdout": "", "stdout_lines": [], "warnings": []}
-  ignore_errors: yes
+  ignore_errors: True
   
   when: (not reference_assembly_source_file.stat.exists) or update_reference_assembly
 

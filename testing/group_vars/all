@@ -5,6 +5,7 @@ test_results_folder_name: testresults
 
 # Variables for Locust
 locust_folder_name: locust
+ga4gh_testing_folder_name: ga4gh-testing
 locust_filename: locustfile.py
 locust_stats_filename: locust_stats_file.log
 

@@ -25,4 +25,4 @@
         -n {{ num_requests }} \
             >{{ ga4gh_working_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }} \
             2>&1
-  ignore_errors: yes
+  ignore_errors: True

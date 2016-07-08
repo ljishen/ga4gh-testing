@@ -31,7 +31,7 @@
     - { role: create_registry, when: recreate_registry_db or not registry_db.stat.exists }
     - { role: server, when: deploy_server }
 
-- name: Query Server Latest Source Code Commit Hash
+- name: Query Server Source Code Commit Hash
   hosts: server
   become: yes
   gather_facts: no
@@ -55,23 +55,46 @@
   roles:
     - { role: compliance_tests }
 
-- name: Checkout and Query Hash of locustfile
+- name: Query Hash of locustfile and Deploy
   hosts: master
+  become: yes
   gather_facts: no
   tasks:
     - name: Checkout the ga4gh-testing Repo (Ensure Updated)
       git:
         repo: https://github.com/ljishen/ga4gh-testing.git
-        dest: {{ ga4gh_working_dir }}
+        dest: "{{ ga4gh_working_dir }}/{{ ga4gh_testing_folder_name }}"
         clone: yes
+        recursive: no
         force: yes
         update: yes
     - name: Query SHA1 Hash
       shell: >
-        git -C {{ ga4gh_working_dir }}/ga4gh_testing ls-files -s locust/{{ locust_filename }} | awk -F' ' '{ print $2 }' 
+        git -C {{ ga4gh_working_dir }}/{{ ga4gh_testing_folder_name }} ls-files -s locust/{{ locust_filename }} | awk -F' ' '{ print $2 }' 
       register: locustfile_hash
     - fail: msg="Unable to get SHA1 hash of locustfile.py"
-      when: locustfile_hash.stdout is undefined 
+      when: locustfile_hash.stdout is undefined
+    - name: Ensure locustfile Directory Exists
+      file: path={{ ga4gh_working_dir }}/{{ locust_folder_name }} state=directory
+    - name: Deploy locustfile
+      command: >
+          cp {{ ga4gh_working_dir }}/{{ ga4gh_testing_folder_name }}/locust/{{ locust_filename }}
+            {{ ga4gh_working_dir }}/{{ locust_folder_name }}
+
+- name: Deploy locustfile to Slaves
+  hosts: slave
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Ensure locustfile Directory Exists
+      file: path={{ ga4gh_working_dir }}/{{ locust_folder_name }} state=directory
+    - name: Copy locustfile to Remote
+      synchronize:
+        src: "{{ ga4gh_working_dir }}/{{ ga4gh_testing_folder_name }}/locust/{{ locust_filename }}"
+        dest: "{{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}"
+        mode: push
+        times: yes
+      delegate_to: groups['master'][0]
 
 - name: Run Locust Testing
   hosts: locust
@@ -81,17 +104,6 @@
   vars:
     num_slaves: "{{ groups.slave | length }}"
     container_name: "locust"
-
-  pre_tasks:
-    - name: Ensure locustfile Directory Exists
-      file: path={{ ga4gh_working_dir }}/{{ locust_folder_name }} state=directory
-    - name: Copy locustfile to Remote
-      synchronize:
-        src: {{ ga4gh_working_dir }}/ga4gh_testing/locust/{{ locust_filename }}
-        dest: {{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}
-        mode: push
-        times: yes
-      delegate_to: groups['master'][0]
 
   roles:
     - { role: locust_standalone, when: num_slaves | int == 0 }
@@ -104,16 +116,15 @@
   
   vars:
     server_commit_hash: "{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}"
-    locustfile_hash: "{{ hostvars[groups['master'][0]]['locustfile_hash']['stdout'] }}"
  
   tasks:
     - block:
         - name: Ensure Destination Directory Exists
           file:
-            path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash }}"
+            path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}"
             state: directory
         - name: Copy Stats File
           command: >
-              cp -p {{ ga4gh_working_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }}
-                {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash }}
+              cp {{ ga4gh_working_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }}
+                {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}
       when: groups.slave | length == 0
