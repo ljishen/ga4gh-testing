@@ -62,7 +62,7 @@
   stat: path={{ server_volume_host_dir }}/{{ reference_assembly_filename }}
   register: reference_assembly_file
 
-- name: Recompress Reference Assembly Using `bgzip`
+- name: Recompress Reference Assembly Using "bgzip"
   docker:
     image: ljishen/samtools
     name: samtools
