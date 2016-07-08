@@ -3,3 +3,4 @@ num_clients: 20
 hatch_rate: 20
 num_requests: 20
 locust_log_filename: locust_log_file.log
+locust_stats_filename: locust_stats_file.log

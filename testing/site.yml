@@ -5,7 +5,6 @@
 # Master:
 #   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash }}:    For Locust Stats File
 #   - {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ compliance_folder_name }}/{{ compliance_test_suite_commit_hash }}:    For Compliance Tests Results
-#   - {{ ga4gh_working_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}:    For Locust Stats File and Log File
 
 - name: Install Docker on Server
   any_errors_fatal: true
@@ -104,27 +103,8 @@
   vars:
     num_slaves: "{{ groups.slave | length }}"
     container_name: "locust"
+#    locust_test_results_path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}"
 
   roles:
-    - { role: locust_standalone, when: num_slaves | int == 0 }
+    - { role: locust_standalone, locust_test_results_path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}", when: num_slaves | int == 0 }
     - { role: locust_distributed, when: num_slaves | int != 0 }
-
-- name: Copy Locust Stats File to File Server Directory
-  hosts: master
-  become: yes
-  gather_facts: no
-  
-  vars:
-    server_commit_hash: "{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}"
- 
-  tasks:
-    - block:
-        - name: Ensure Destination Directory Exists
-          file:
-            path: "{{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}"
-            state: directory
-        - name: Copy Stats File
-          command: >
-              cp {{ ga4gh_working_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }}
-                {{ file_server_dir }}/{{ test_results_folder_name }}/server_{{ server_commit_hash }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}
-      when: groups.slave | length == 0

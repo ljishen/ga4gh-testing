@@ -6,23 +6,23 @@
     state: absent
     pull: always
 
-- name: Ensure Locust Test Result Directory Exists
-  file: path={{ ga4gh_working_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }} state=directory
+- name: Ensure Locust Test Results Directory Exists
+  file: path={{ locust_test_results_path }} state=directory
 
 - name: Run Load Testing
   shell: >
     docker run \
-      -v {{ ga4gh_working_dir }}:/root  \
+      -v {{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}:/root/{{ locust_filename }}:ro \
+      -v {{ locust_test_results_path }}:/root/{{ test_results_folder_name }}
       --name {{ container_name }} \
       ljishen/locust  \
       /usr/local/bin/locust \
-        -f /root/{{ locust_folder_name }}/{{ locust_filename }} \
+        -f /root/{{ locust_filename }} \
         --host=http://{{ groups['server'][0] }}/ga4gh \
         --no-web --only-summary \
-        --logfile {{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_log_filename }} \
+        --logfile {{ test_results_folder_name }}/{{ locust_log_filename }} \
         -c {{ num_clients }} \
         -r {{ hatch_rate }} \
         -n {{ num_requests }} \
-            >{{ ga4gh_working_dir }}/{{ test_results_folder_name }}/{{ locust_folder_name }}/{{ locust_stats_filename }} \
-            2>&1
+            &> {{ locust_test_results_path }}/{{ locust_stats_filename }}
   ignore_errors: True

@@ -7,7 +7,6 @@ test_results_folder_name: testresults
 locust_folder_name: locust
 ga4gh_testing_folder_name: ga4gh-testing
 locust_filename: locustfile.py
-locust_stats_filename: locust_stats_file.log
 
 # Variables for server
 server_container_name: ga4gh_server
