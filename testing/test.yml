@@ -103,15 +103,13 @@
   become: yes
   gather_facts: no
   tasks:
-    - block:
-        - name: Delete "twistd.pid" in {{ file_server_root }}
-          file: path={{ file_server_root }}/twistd.pid state=absent
-        - docker:
-            image: ljishen/twisted-web-server
-            name: twisted-web-server
-            state: reloaded
-            pull: always
-            restart_policy: on-failure
-            ports: "{{ file_server_port }}:80"
-            volumes: "{{ file_server_root }}:/root"
-      when: groups.slave | length | int == 0
+    - name: Delete "twistd.pid" in {{ file_server_root }}
+      file: path={{ file_server_root }}/twistd.pid state=absent
+    - docker:
+        image: ljishen/twisted-web-server
+        name: twisted-web-server
+        state: reloaded
+        pull: always
+        restart_policy: on-failure
+        ports: "{{ file_server_port }}:80"
+        volumes: "{{ file_server_root }}:/root"
