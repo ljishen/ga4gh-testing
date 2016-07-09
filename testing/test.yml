@@ -65,27 +65,16 @@
       register: locustfile_hash
     - fail: msg="Unable to get SHA1 hash of locustfile.py"
       when: locustfile_hash.stdout is undefined
-    - name: Ensure locustfile Directory Exists
-      file: path={{ ga4gh_working_dir }}/{{ locust_folder_name }} state=directory
-    - name: Deploy locustfile
-      command: >
-          cp {{ ga4gh_working_dir }}/{{ ga4gh_testing_folder_name }}/locust/{{ locust_filename }}
-            {{ ga4gh_working_dir }}/{{ locust_folder_name }}
-
-- name: Deploy locustfile to Slaves
-  hosts: slave
-  become: yes
-  gather_facts: no
-  tasks:
-    - name: Ensure locustfile Directory Exists
-      file: path={{ ga4gh_working_dir }}/{{ locust_folder_name }} state=directory
-    - name: Copy locustfile to Remote
-      synchronize:
+    - name: Ensure Local locustfile Directory Exists
+      local_action:
+        module: file
+        path: "{{ ga4gh_working_dir }}/{{ locust_folder_name }}"
+        state: directory
+    - name: Download locustfile
+      fetch:
         src: "{{ ga4gh_working_dir }}/{{ ga4gh_testing_folder_name }}/locust/{{ locust_filename }}"
         dest: "{{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}"
-        mode: push
-        times: yes
-      delegate_to: groups['master'][0]
+        flat: yes
 
 - name: Run Locust Testing
   hosts: locust
@@ -95,6 +84,15 @@
   vars:
     num_slaves: "{{ groups.slave | length }}"
     container_name: "locust"
+
+  pre_tasks:
+    - name: Ensure locustfile Directory Exists
+      file: path={{ ga4gh_working_dir }}/{{ locust_folder_name }} state=directory
+    - name: Copy locustfile to Remote
+      copy:
+        src: "{{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}"
+        dest: "{{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}"
+        force: yes
 
   roles:
     - { role: locust_standalone, locust_test_results_path: "{{ file_server_root }}/{{ test_results_folder_name }}/server_{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}", when: num_slaves | int == 0 }
@@ -106,7 +104,7 @@
   gather_facts: no
   tasks:
     - block:
-        - name: Delete "twistd.pid" in File Server Root
+        - name: Delete "twistd.pid" in {{ file_server_root }}
           file: path={{ file_server_root }}/twistd.pid state=absent
         - docker:
             image: ljishen/twisted-web-server
