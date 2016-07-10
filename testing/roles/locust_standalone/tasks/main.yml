@@ -2,7 +2,7 @@
 - name: Pull (or update) Locust Image and Clean Existing Container 
   docker:
     image: ljishen/locust
-    name: "{{ container_name }}"
+    name: "{{ locust_container_name }}"
     state: absent
     pull: always
 
@@ -14,7 +14,7 @@
     docker run \
       -v {{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}:/root/{{ locust_filename }}:ro \
       -v {{ locust_test_results_path }}:/root/{{ test_results_folder_name }} \
-      --name {{ container_name }} \
+      --name {{ locust_container_name }} \
       ljishen/locust  \
         -f /root/{{ locust_filename }} \
         --host=http://{{ groups['server'][0] }}/ga4gh \

@@ -8,6 +8,7 @@ file_server_port: 8085
 locust_folder_name: locust
 ga4gh_testing_folder_name: ga4gh-testing
 locust_filename: locustfile.py
+locust_container_name: locust
 
 # Variables for server
 server_container_name: ga4gh_server
