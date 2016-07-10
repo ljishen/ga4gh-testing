@@ -5,10 +5,12 @@ This project aims at runing `load testing` and `compliance test suite` for GA4GH
 #### Usage
 - `cd` to folder `testing`
 - Install necessary roles for the first time
+
     ```bash
     ansible-galaxy install -r requirements.yml
     ```
 - Run the playbook
+
     ```bash
     ansible-playbook test.yml -k
     ```
