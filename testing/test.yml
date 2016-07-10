@@ -46,7 +46,7 @@
   roles:
     - { role: compliance_tests }
 
-- name: Query Hash of locustfile and Deploy
+- name: Query Hash of locustfile and Download to Local
   hosts: master
   become: yes
   gather_facts: no
@@ -76,16 +76,11 @@
         dest: "{{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}"
         flat: yes
 
-- name: Run Locust Testing
+- name: Deploy locustfile
   hosts: locust
   become: yes
   gather_facts: no
-
-  vars:
-    num_slaves: "{{ groups.slave | length }}"
-    container_name: "locust"
-
-  pre_tasks:
+  tasks:
     - name: Ensure locustfile Directory Exists
       file: path={{ ga4gh_working_dir }}/{{ locust_folder_name }} state=directory
     - name: Copy locustfile to Remote
@@ -94,9 +89,25 @@
         dest: "{{ ga4gh_working_dir }}/{{ locust_folder_name }}/{{ locust_filename }}"
         force: yes
 
+- name: Launch Locust Testing (Master)
+  hosts: master
+  become: yes
+  gather_facts: no
+
+  vars:
+    num_slaves: "{{ groups.slave | length }}"
+
   roles:
     - { role: locust_standalone, locust_test_results_path: "{{ file_server_root }}/{{ test_results_folder_name }}/server_{{ hostvars[groups['server'][0]]['commit_hash']['stdout'] }}/{{ locust_folder_name }}/{{ locustfile_hash.stdout }}", when: num_slaves | int == 0 }
     - { role: locust_distributed, when: num_slaves | int != 0 }
+
+- name: Launch Locust Testing (Slaves)
+  hosts: slave
+  become: yes
+  gather_facts: no
+
+  roles:
+    - { role: locust_distributed }
 
 - name: Launch File Server
   hosts: master 

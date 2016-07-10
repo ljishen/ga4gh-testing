@@ -2,7 +2,7 @@
 file_server_root: /srv/http
 ga4gh_working_dir: /ga4gh
 test_results_folder_name: testresults
-file_server_port: 80
+file_server_port: 8085
 
 # Variables for Locust
 locust_folder_name: locust
