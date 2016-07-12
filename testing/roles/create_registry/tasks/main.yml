@@ -70,7 +70,7 @@
     detach: False
     volumes: "{{ server_volume_host_dir }}:/data:rw"
     command: >
-        /usr/local/bin/bgzip -f --threads {{ ansible_processor_cores }}
+        bgzip -f --threads {{ ansible_processor_cores }}
             /data/{{ reference_assembly_filename }}
   when: reference_assembly_file.stat.exists
 
