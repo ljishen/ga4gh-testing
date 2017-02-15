@@ -1,6 +1,6 @@
-# Continuous Testing for GA4GH API
+# Automate Continuous Testing on GA4GH API
 
-This project aims at runing `load testing` and `compliance test suite` for GA4GH API, and organizes easy to read testing results for iterative development. It makes use of `Docker` and `Ansible`. The Ansible project is under folder `testing`, the others are the docker images used in the testing process.
+This project aims at runing `load testing` and `compliance test suite` on GA4GH API, and organizes easy to read testing results for iterative development. It makes use of `Docker` and `Ansible`. The Ansible project is under folder `testing`, the others are the docker images used in the testing process.
 
 #### Usage
 - `cd` to folder `testing`
